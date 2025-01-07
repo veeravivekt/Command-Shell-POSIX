@@ -10,8 +10,11 @@ public class Main {
             
             if (input.equalsIgnoreCase("exit 0")) {
                 break;
+            } else if (input.startsWith("echo ")) {
+                System.out.println(input.substring("echo ".length()));
+            } else {
+                System.out.println(input + ": command not found");
             }
-            System.out.println(input + ": command not found");
         }
     }
 }
