@@ -2,6 +2,7 @@ import java.util.Scanner;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.io.IOException;
 
 public class Main {
     private static final List<String> BUILTINS = Arrays.asList("echo", "exit", "type");
@@ -20,7 +21,7 @@ public class Main {
             } else if (input.startsWith("type ")){
                 handleTypeCommand(input.substring(5), pathEnv);
             } else {
-                System.out.println(input + ": command not found");
+                executeExternalCommand(input, pathEnv);
             }
         }
     }
@@ -46,5 +47,27 @@ public class Main {
             }
         }
         return null;
+    }
+
+    private static void executeExternalCommand(String input, String pathEnv) {
+        String[] parts = input.split("\\s+");
+        String command = parts[0];
+        String executablePath = findExecutablePath(command, pathEnv);
+
+        if (executablePath != null) {
+            try {
+                ProcessBuilder pb = new ProcessBuilder(parts);
+                pb.inheritIO();
+                Process process = pb.start();
+                int exitCode = process.waitFor();
+                if (exitCode != 0) {
+                    System.err.println("Command exited with non-zero status: " + exitCode);
+                }
+            } catch (IOException | InterruptedException e) {
+                System.err.println("Error executing command: " + e.getMessage());
+            }
+        } else {
+            System.out.println(command + ": command not found");
+        }
     }
 }
