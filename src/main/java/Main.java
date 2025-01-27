@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 public class Main {
-    private static final List<String> BUILTINS = Arrays.asList("echo", "exit", "type", "pwd");
+    private static final List<String> BUILTINS = Arrays.asList("echo", "exit", "type", "pwd", "cd");
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         String pathEnv = System.getenv("PATH");
@@ -21,6 +21,8 @@ public class Main {
                 System.out.println(input.substring("echo ".length()));
             } else if (input.startsWith("type ")){
                 handleTypeCommand(input.substring(5), pathEnv);
+            } else if (input.startsWith("cd ")){
+                handleCdCommand(input.substring(3));
             } else if (input.equals("pwd")){
                 handlePwdCommand();
             } else {
@@ -74,7 +76,15 @@ public class Main {
         }
     }
     private static void handlePwdCommand() {
-        String currentDir = Paths.get("").toAbsolutePath().toString();
+        String currentDir = System.getProperty("user.dir");
         System.out.println(currentDir);
+    }
+    private static void handleCdCommand(String path) {
+        File newDir = new File(path);
+        if (newDir.isAbsolute() && newDir.exists() && newDir.isDirectory()) {
+            System.setProperty("user.dir", newDir.getAbsolutePath());
+        } else {
+            System.out.println("cd: " + path + ": No such file or directory");
+        }
     }
 }
