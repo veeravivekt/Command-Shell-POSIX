@@ -3,7 +3,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Files;
 
 public class Main {
     private static final List<String> BUILTINS = Arrays.asList("echo", "exit", "type", "pwd", "cd");
@@ -80,9 +82,17 @@ public class Main {
         System.out.println(currentDir);
     }
     private static void handleCdCommand(String path) {
-        File newDir = new File(path);
-        if (newDir.isAbsolute() && newDir.exists() && newDir.isDirectory()) {
-            System.setProperty("user.dir", newDir.getAbsolutePath());
+        Path currPath = Paths.get(System.getProperty("user.dir"));
+        Path newPath;
+
+        if (path.startsWith("/")) {
+            newPath = Paths.get(path);
+        } else {
+            newPath = currPath.resolve(path).normalize();
+        }
+
+        if (Files.exists(newPath) && Files.isDirectory(newPath)) {
+            System.setProperty("user.dir", newPath.toString());
         } else {
             System.out.println("cd: " + path + ": No such file or directory");
         }
