@@ -3,9 +3,10 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class Main {
-    private static final List<String> BUILTINS = Arrays.asList("echo", "exit", "type");
+    private static final List<String> BUILTINS = Arrays.asList("echo", "exit", "type", "pwd");
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         String pathEnv = System.getenv("PATH");
@@ -20,6 +21,8 @@ public class Main {
                 System.out.println(input.substring("echo ".length()));
             } else if (input.startsWith("type ")){
                 handleTypeCommand(input.substring(5), pathEnv);
+            } else if (input.equals("pwd")){
+                handlePwdCommand();
             } else {
                 executeExternalCommand(input, pathEnv);
             }
@@ -69,5 +72,9 @@ public class Main {
         } else {
             System.out.println(command + ": command not found");
         }
+    }
+    private static void handlePwdCommand() {
+        String currentDir = Paths.get("").toAbsolutePath().toString();
+        System.out.println(currentDir);
     }
 }
