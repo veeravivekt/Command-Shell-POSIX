@@ -8,15 +8,19 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 
 public class Main {
+    // List of built-in commands
     private static final List<String> BUILTINS = Arrays.asList("echo", "exit", "type", "pwd", "cd");
+    
     public static void main(String[] args) throws Exception {
-        Scanner scanner = new Scanner(System.in);
-        String pathEnv = System.getenv("PATH");
-
-         while (true) {
-            System.out.print("$ ");
-            String input = scanner.nextLine();
+        Scanner scanner = new Scanner(System.in); // user input
+        String pathEnv = System.getenv("PATH"); // get the PATH env variable
+        
+        // Main shell loop
+        while (true) {
+            System.out.print("$ "); // Print shell prompt
+            String input = scanner.nextLine(); // Read user input
             
+            // Handle different commands
             if (input.equalsIgnoreCase("exit 0")) {
                 break;
             } else if (input.startsWith("echo ")) {
@@ -32,6 +36,8 @@ public class Main {
             }
         }
     }
+
+    // Handle the 'type' command
     private static void handleTypeCommand(String command, String pathEnv) {
         if (BUILTINS.contains(command)) {
             System.out.println(command + " is a shell builtin");
@@ -45,6 +51,7 @@ public class Main {
         }
     }
 
+    // Find the path of an executable PATH
     private static String findExecutablePath(String command, String pathEnv) {
         String[] directories = pathEnv.split(File.pathSeparator);
         for (String directory : directories) {
@@ -56,6 +63,7 @@ public class Main {
         return null;
     }
 
+    // Execute an external command
     private static void executeExternalCommand(String input, String pathEnv) {
         String[] parts = input.split("\\s+");
         String command = parts[0];
@@ -77,22 +85,34 @@ public class Main {
             System.out.println(command + ": command not found");
         }
     }
+
+    // Handling the 'pwd' command
     private static void handlePwdCommand() {
         String currentDir = System.getProperty("user.dir");
         System.out.println(currentDir);
     }
+    
+    // Handle the 'cd' command
     private static void handleCdCommand(String path) {
         Path currPath = Paths.get(System.getProperty("user.dir"));
         Path newPath;
 
-        if (path.startsWith("/")) {
-            newPath = Paths.get(path);
+        // Home directory ~ or ~/ path
+        if (path.startsWith("~")) {
+            String homeDir = System.getenv("HOME");
+            if (path.equals("~")) {
+                newPath = Paths.get(homeDir);
+            } else {
+                newPath = Paths.get(homeDir, path.substring(2));
+            }
+        } else if (path.startsWith("/")) {
+            newPath = Paths.get(path); // Absolute path
         } else {
-            newPath = currPath.resolve(path).normalize();
+            newPath = currPath.resolve(path).normalize(); // Relative path
         }
 
         if (Files.exists(newPath) && Files.isDirectory(newPath)) {
-            System.setProperty("user.dir", newPath.toString());
+            System.setProperty("user.dir", newPath.toString()); // Change directory
         } else {
             System.out.println("cd: " + path + ": No such file or directory");
         }
