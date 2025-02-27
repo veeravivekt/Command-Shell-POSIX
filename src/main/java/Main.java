@@ -1,5 +1,6 @@
 import java.util.Scanner;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class Main {
             if (input.equalsIgnoreCase("exit 0")) {
                 break;
             } else if (input.startsWith("echo ")) {
-                System.out.println(input.substring("echo ".length()));
+                handleEchoCommand(input.substring(5));
             } else if (input.startsWith("type ")){
                 handleTypeCommand(input.substring(5), pathEnv);
             } else if (input.startsWith("cd ")){
@@ -65,8 +66,8 @@ public class Main {
 
     // Execute an external command
     private static void executeExternalCommand(String input, String pathEnv) {
-        String[] parts = input.split("\\s+");
-        String command = parts[0];
+        List<String> parts = parseCommandWithQuotes(input);
+        String command = parts.get(0);
         String executablePath = findExecutablePath(command, pathEnv);
 
         if (executablePath != null) {
@@ -84,6 +85,29 @@ public class Main {
         } else {
             System.out.println(command + ": command not found");
         }
+    }
+    private static List<String> parseCommandWithQuotes(String input) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder currentPart = new StringBuilder();
+        boolean inQuotes = false;
+        
+        for (char c : input.toCharArray()) {
+            if (c == '\'') {
+                inQuotes = !inQuotes;
+            } else if (c == ' ' && !inQuotes) {
+                if (currentPart.length() > 0) {
+                    parts.add(currentPart.toString());
+                    currentPart.setLength(0);
+                }
+            } else {
+                currentPart.append(c);
+            }
+        }
+
+        if (currentPart.length() > 0) {
+            parts.add(currentPart.toString());
+        }
+        return parts;
     }
 
     // Handling the 'pwd' command
@@ -117,4 +141,41 @@ public class Main {
             System.out.println("cd: " + path + ": No such file or directory");
         }
     }
+
+    // Handle 'echo' command
+    private static void handleEchoCommand(String args) {
+        List<String> parsedArgs = parseArgumentsWithQuotes(args);
+        System.out.println(String.join(" ", parsedArgs));
+    }
+    
+    private static List<String> parseArgumentsWithQuotes(String input) {
+        List<String> args = new ArrayList<>();
+        StringBuilder currentArg = new StringBuilder();
+        boolean inQuotes = false;
+    
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+    
+            if (c == '\'') {
+                // Toggle inQuotes flag when encountering a single quote
+                inQuotes = !inQuotes;
+            } else if (c == ' ' && !inQuotes) {
+                // If not inside quotes, treat space as argument separator
+                if (currentArg.length() > 0) {
+                    args.add(currentArg.toString());
+                    currentArg.setLength(0);
+                }
+            } else {
+                // Append character to the current argument
+                currentArg.append(c);
+            }
+        }
+
+        // Add the last argument if any
+        if (currentArg.length() > 0) {
+            args.add(currentArg.toString());
+        }
+        return args;
+    }
+    
 }
